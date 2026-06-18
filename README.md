@@ -48,7 +48,7 @@ en producción.
 ## Estructura del proyecto
 
 ```
-devsecops-shift-left-demo/
+devsecops-shift/
 ├── app/                      # Aplicación Flask
 │   ├── app.py                # Rutas y lógica (vulns intencionales en `vulnerable`)
 │   ├── db.py                 # Acceso a datos
@@ -86,11 +86,6 @@ una a una.
 | IDOR / control de acceso roto | A01 – Broken Access Control | ZAP (parcial), revisión manual | Verificación de propiedad y autorización |
 | Dependencia con CVE conocido | A06 – Vulnerable & Outdated Components | pip-audit / Trivy (SCA) | Actualización de la versión fijada |
 
-> **Detalle que suma valor en una entrevista:** el IDOR muestra a propósito los
-> *límites* de las herramientas automáticas. El SAST no lo cazará bien porque es
-> un fallo de lógica de autorización, no de patrón de código. Eso abre la
-> conversación sobre por qué el shift-left **complementa** —pero no reemplaza— la
-> revisión de diseño y el pentesting manual.
 
 ## El pipeline (GitHub Actions)
 
@@ -117,8 +112,8 @@ pasan y el deploy queda habilitado.
 
 ```bash
 # Clonar y elegir la versión a inspeccionar
-git clone https://github.com/<tu-usuario>/devsecops-shift-left-demo.git
-cd devsecops-shift-left-demo
+git clone https://github.com/RodBarrera/devsecops-shift.git
+cd devsecops-shift
 
 # Levantar la app (versión vulnerable o segura según la rama)
 docker compose up --build
