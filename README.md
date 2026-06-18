@@ -13,10 +13,7 @@ El gancho del proyecto es el contraste: el **mismo pipeline** se pone 🔴 **roj
 sobre la rama `vulnerable` y 🟢 **verde** sobre la rama `secure`. Esa diferencia,
 visible en un solo vistazo, es la materialización de *security by design*.
 
-![Pipeline en rojo sobre la app vulnerable](docs/pipeline-fail.png)
-![Pipeline en verde sobre la app corregida](docs/pipeline-pass.png)
 
-> _Reemplaza estas capturas por las de tus ejecuciones reales de GitHub Actions._
 
 ## Concepto: shift-left
 
@@ -168,4 +165,4 @@ provisto únicamente con fines educativos.
 
 ---
 
-Desarrollado por **Rod Barrera** · Ingeniero en Ciberseguridad.
+Desarrollado por **Jorge Barrera** · Ingeniero en Ciberseguridad.
