@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notas — Demo DevSecOps</title>
+  <style>
+    :root { --bg:#0f172a; --card:#1e293b; --ink:#e2e8f0; --muted:#94a3b8;
+            --accent:#38bdf8; --danger:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg);
+           color:var(--ink); }
+    header { background:var(--card); padding:14px 22px; display:flex;
+             justify-content:space-between; align-items:center;
+             border-bottom:1px solid #334155; }
+    header h1 { font-size:17px; margin:0; }
+    header .badge { color:var(--danger); font-size:12px; border:1px solid var(--danger);
+                    border-radius:6px; padding:2px 8px; margin-left:10px; }
+    a { color:var(--accent); text-decoration:none; }
+    main { max-width:720px; margin:32px auto; padding:0 22px; }
+    .card { background:var(--card); border:1px solid #334155; border-radius:10px;
+            padding:18px 20px; margin-bottom:16px; }
+    input, textarea { width:100%; padding:10px; margin:6px 0 14px; border-radius:8px;
+                      border:1px solid #475569; background:#0b1220; color:var(--ink); }
+    button { background:var(--accent); color:#04293b; border:0; border-radius:8px;
+             padding:10px 16px; font-weight:600; cursor:pointer; }
+    .muted { color:var(--muted); font-size:13px; }
+    .error { color:var(--danger); }
+    .note-body { white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>📝 Mis Notas <span class="badge">build: vulnerable</span></h1></div>
+    <nav>
+      {% if session.get('user') %}
+        <span class="muted">{{ session['user'] }}</span> ·
+        <a href="{{ url_for('logout') }}">Salir</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

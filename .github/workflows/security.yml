@@ -1,0 +1,142 @@
+name: Security Pipeline (Shift-Left)
+
+# Se ejecuta en cada push y en cada pull request.
+# El objetivo: detectar vulnerabilidades ANTES del merge/deploy.
+# En la rama `vulnerable` el pipeline falla (🔴); en `secure` pasa (🟢).
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1 · SECRET SCANNING — Gitleaks
+  #    Busca credenciales y llaves hardcodeadas en el código.
+  # ─────────────────────────────────────────────────────────────────────────
+  secret-scan:
+    name: "1 · Secret Scanning (Gitleaks)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Instalar Gitleaks
+        run: |
+          GL_VER=8.30.1
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GL_VER}/gitleaks_${GL_VER}_linux_x64.tar.gz" | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+
+      - name: Escanear secretos
+        run: gitleaks dir . --report-format sarif --report-path gitleaks.sarif --exit-code 1 -v
+
+      - name: Subir reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks.sarif
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2 · SAST — Bandit + Semgrep
+  #    Análisis estático del código fuente.
+  # ─────────────────────────────────────────────────────────────────────────
+  sast:
+    name: "2 · SAST (Bandit + Semgrep)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar herramientas
+        run: pip install bandit semgrep
+
+      - name: Bandit (reporte)
+        run: bandit -r app/ -f json -o bandit-report.json || true
+
+      - name: Bandit (gate)
+        run: bandit -r app/ --severity-level medium
+
+      - name: Semgrep (gate · reglas propias)
+        run: semgrep scan --config .semgrep.yml --error app/
+
+      - name: Semgrep (cobertura extra · reglas oficiales)
+        run: semgrep scan --config p/security-audit --config p/python app/ || true
+
+      - name: Subir reporte Bandit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 3 · SCA — pip-audit
+  #    Revisa las dependencias contra bases de CVE.
+  # ─────────────────────────────────────────────────────────────────────────
+  sca:
+    name: "3 · SCA / Dependencias (pip-audit)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar pip-audit
+        run: pip install pip-audit
+
+      - name: Auditar dependencias
+        run: pip-audit -r app/requirements.txt --desc
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 4 · DAST — OWASP ZAP (baseline)
+  #    Levanta la app y la escanea en ejecución.
+  # ─────────────────────────────────────────────────────────────────────────
+  dast:
+    name: "4 · DAST (OWASP ZAP)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Levantar la app
+        run: docker compose up -d --build
+
+      - name: Esperar a que la app responda
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/login >/dev/null; then
+              echo "App lista"; exit 0
+            fi
+            sleep 2
+          done
+          echo "La app no respondió a tiempo"; docker compose logs; exit 1
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          # La app se publica en el host; desde el contenedor de ZAP se alcanza
+          # vía la gateway del bridge de Docker (172.17.0.1).
+          target: "http://172.17.0.1:5000"
+          rules_file_name: ".zap/rules.tsv"
+          fail_action: true
+          allow_issue_writing: false
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # GATE — solo pasa si TODAS las etapas anteriores pasaron.
+  #    Representa la barrera que habilita (o no) el deploy.
+  # ─────────────────────────────────────────────────────────────────────────
+  security-gate:
+    name: "✅ Security Gate (deploy permitido)"
+    runs-on: ubuntu-latest
+    needs: [secret-scan, sast, sca, dast]
+    steps:
+      - name: Todas las verificaciones pasaron
+        run: echo "Sin hallazgos sobre el umbral. Deploy habilitado."

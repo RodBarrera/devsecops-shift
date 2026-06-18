@@ -1,0 +1,13 @@
+# Reglas del escaneo baseline de OWASP ZAP.
+# Formato:  <id_de_alerta>\t<WARN|FAIL|IGNORE>\t<comentario opcional>
+# Con fail_action: true, cualquier alerta WARN o FAIL hace fallar el pipeline.
+# Las alertas puramente informativas o de bajo valor se marcan IGNORE para
+# que la rama `secure` (ya endurecida) pueda quedar en verde.
+#
+# Sobre la app `vulnerable`, ZAP reportará, entre otras: cabeceras de seguridad
+# ausentes (CSP, X-Content-Type-Options, HSTS) y XSS, lo que dispara el fallo.
+# En `secure` esas cabeceras se agregan y estas reglas quedan limpias.
+
+10096	IGNORE	(Timestamp Disclosure - ruido habitual en demos)
+10027	IGNORE	(Information Disclosure - Suspicious Comments)
+10109	IGNORE	(Modern Web Application)

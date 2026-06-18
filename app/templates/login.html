@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Iniciar sesión</h2>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('login') }}">
+    <label>Usuario</label>
+    <input type="text" name="username" autofocus>
+    <label>Contraseña</label>
+    <input type="password" name="password">
+    <button type="submit">Entrar</button>
+  </form>
+  <p class="muted">Usuarios de prueba: <code>alice / alice123</code> ·
+     <code>bob / bob123</code></p>
+</div>
+{% endblock %}

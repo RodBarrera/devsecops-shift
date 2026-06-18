@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+notes.db
+venv/
+.venv/
+*.sarif
+bandit-report.json
+zap-report.html

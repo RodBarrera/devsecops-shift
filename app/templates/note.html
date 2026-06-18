@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>{{ note['title'] }}</h2>
+  {# ───────────────────────────────────────────────────────────────────── #}
+  {# [VULN] A03:2021 – Injection (Stored XSS)                               #}
+  {#   El cuerpo de la nota (entrada del usuario) se renderiza con |safe,   #}
+  {#   desactivando el autoescape de Jinja2.                                #}
+  {#   PoC: guardar una nota cuyo contenido sea <script>alert(1)</script>.  #}
+  {#   Detectado por: Semgrep, DAST (OWASP ZAP)                             #}
+  {#   Fix en `secure`: eliminar |safe y dejar que Jinja2 escape la salida. #}
+  {# ───────────────────────────────────────────────────────────────────── #}
+  <div class="note-body">{{ note['body'] | safe }}</div>
+  <p style="margin-top:18px"><a href="{{ url_for('index') }}">← Volver</a></p>
+</div>
+{% endblock %}

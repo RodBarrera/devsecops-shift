@@ -1,0 +1,6 @@
+Flask>=3.0,<4.0
+# [VULN] A06:2021 – Vulnerable & Outdated Components
+#   requests 2.31.0 tiene CVE conocidos (p. ej. CVE-2024-35195, fuga de
+#   verificación de certificados al reutilizar sesiones). Intencional.
+#   Detectado por: pip-audit / Trivy.  Fix en `secure`: requests>=2.32.4.
+requests==2.31.0

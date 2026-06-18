@@ -1,0 +1,47 @@
+# Reglas Semgrep propias del proyecto.
+# Viajan en el repo para que el SAST no dependa de la disponibilidad del
+# registro remoto. En el pipeline se combinan con los rulesets oficiales
+# (p/security-audit, p/python) para máxima cobertura.
+rules:
+  # XSS almacenado: filtro |safe sobre datos en plantillas Jinja2.
+  # Es la falla que el SAST de Python (Bandit) NO ve, porque vive en la plantilla.
+  - id: jinja2-safe-filter-xss
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      Filtro |safe en plantilla Jinja2: desactiva el autoescape y permite XSS
+      si el dato proviene del usuario (A03:2021 Injection).
+    pattern: "{{ ... | safe }}"
+    paths:
+      include: ["*.html"]
+
+  # Inyección de comandos: subprocess con shell=True.
+  - id: subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess con shell=True y entrada no confiable
+      (A03:2021 Injection - Command Injection).
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+
+  # SQLi: consulta construida concatenando strings.
+  - id: tainted-sql-string-concat
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Consulta SQL construida por concatenación de strings
+      (A03:2021 Injection - SQLi). Usa consultas parametrizadas.
+    patterns:
+      - pattern: $X + $Y
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(select|insert|update|delete).*
+
+  # Hash débil para contraseñas.
+  - id: weak-hash-md5
+    languages: [python]
+    severity: ERROR
+    message: >-
+      MD5 es inadecuado para contraseñas (A02:2021 Cryptographic Failures).
+      Usa bcrypt o argon2.
+    pattern: hashlib.md5(...)

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Ping a {{ host }}</h2>
+  <pre class="note-body">{{ result }}</pre>
+  <p><a href="{{ url_for('index') }}">← Volver</a></p>
+</div>
+{% endblock %}
